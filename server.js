@@ -5,6 +5,13 @@ var bodyParser = require("body-parser")
 const mongoose = require("mongoose");
 const bcrypt = require ("bcrypt");
 const cookieSession = require("cookie-session");
+const Emp = require('./model/emp')
+const AdminBro = require('admin-bro')
+const AdminBroMongoose = require('@admin-bro/mongoose')
+const AdminBroExpress = require('@admin-bro/express')
+const swaggerUi = require('swagger-ui-express')
+swaggerDocument = require('./swagger.json');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const ejs = require('ejs')
 const port = 3002;
@@ -37,6 +44,7 @@ app.use("/blogs", require("./routes/blogs"));
 app.use("/reviews", require("./routes/reviews"));
 app.use("/categories", require("./routes/categories"));
 app.use("/assets", express.static(__dirname+"/assets"));
+
 app.use('/js',express.static(__dirname +'/js'));
 
 
@@ -50,13 +58,12 @@ app
     .get("/", (req, res) => {
         res.render("index");
     })
-    .get("/login", (req, res) => {
-        res.render("login");
-    })
+app.get("/login", function(req, res){
+    res.render("login");
+})
     .get("/register", (req, res) => {
         res.render("register");
     })
-
 
 
 app
@@ -137,6 +144,21 @@ app.post("/",((req, res) => {
     })
     // res.send(response)
 }))
+
+//Admin Bro
+AdminBro.registerAdapter(AdminBroMongoose)
+const AdminBroOptions = {
+    resources: [User, Emp],
+}
+const adminBro = new AdminBro(AdminBroOptions)
+const router = AdminBroExpress.buildRouter(adminBro)
+app.use(adminBro.options.rootPath, router)
+
+app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocument)
+);
 
 app.listen(port, () =>
     console.log(`App listening at http://localhost:${port}`)
